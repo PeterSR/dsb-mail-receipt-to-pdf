@@ -1,0 +1,12 @@
+<vars>
+# template variable with custom regular expression:
+LOCATION = "[a-zA-ZæøåÆØÅ\.\s]+"
+REST = ".*"
+</vars>
+
+<group>
+Til rejsen: {{ source | re(LOCATION) }} > {{ destination | re(LOCATION) }}, d. {{ day }}. {{ month }} {{ year }}
+</group>
+<group>
+Pris i alt: {{ price }} kr.
+</group>
