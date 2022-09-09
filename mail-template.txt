@@ -4,9 +4,16 @@ LOCATION = "[a-zA-ZæøåÆØÅ\.\s]+"
 REST = ".*"
 </vars>
 
-<group>
-Til rejsen: {{ source | re(LOCATION) }} > {{ destination | re(LOCATION) }}, d. {{ day }}. {{ month }} {{ year }}
+<group name="purchase">
+Du har d. {{ day }}. {{ month }} year {{ ignore }} købt:
 </group>
-<group>
-Pris i alt: {{ price }} kr.
+<group name="commuter_card">
+Pendlerkort, {{ card_type1 }}, {{ card_type2 }}, {{ source | re(LOCATION) }} &lt;-&gt; {{ destination | re(LOCATION) }}{{ ignore(REST) }}
+Dit kort er gyldigt {{ from_day }}. {{ from_month }} {{ from_year }} – {{ to_day }}. {{ to_month }} {{ to_year }}
+</group>
+<group name="travel">
+Til rejsen: {{ source | re(LOCATION) }} &gt; {{ destination | re(LOCATION) }}, d. {{ day }}. {{ month }} {{ year }}
+</group>
+<group name="price">
+Pris i alt: {{ amount }} {{ currency }}
 </group>

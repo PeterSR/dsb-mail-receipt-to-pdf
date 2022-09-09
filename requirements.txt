@@ -1,3 +1,4 @@
 pdfkit
 mail-parser
 ttp
+price-parser

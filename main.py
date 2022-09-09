@@ -1,17 +1,19 @@
+import pathlib
 import argparse
 import imaplib
 import getpass
-import calendar
 import pdfkit
 import email, email.policy
 import mailparser
 
 from ttp import ttp
 from dataclasses import dataclass
+from price_parser import Price
 
 
 @dataclass
 class TravelInfo:
+    purchase_type: str
     date: str
     source: str
     destination: str
@@ -22,7 +24,12 @@ def generate_pdf_name(travel_info: TravelInfo) -> str:
     date = travel_info.date
     src = travel_info.source
     dst = travel_info.destination
-    type_ = "pladsbillet" if travel_info.price < 50 else "billet"
+    if travel_info.price < 50:
+        type_ = "pladsbillet"
+    elif travel_info.price > 3000:
+        type_ = "pendlerkort"
+    else:
+        type_ = "billet"
     return f"DSB-{date}-{src}-{dst}-{type_}.pdf"
 
 
@@ -41,6 +48,8 @@ def short_location(loc):
             loc = "KBH"
         elif "odense" in loc.lower():
             loc = "ODN"
+        elif "lyngby" in loc.lower():
+            loc = "LBY"
 
     return loc
 
@@ -70,8 +79,8 @@ def extract_travel_info(text: str) -> TravelInfo:
     destination = None
     price = None
 
-    with open("./mail-template.txt") as f:
-        template = f.read()
+    template_path = pathlib.Path(__file__).parent / "mail-template.txt"
+    template = template_path.read_text()
 
     parser = ttp(data=text, template=template)
     parser.parse()
@@ -79,25 +88,52 @@ def extract_travel_info(text: str) -> TravelInfo:
 
     x = res[0][0]
 
-    source = short_location(find_by_key(x, "source"))
-    destination = short_location(find_by_key(x, "destination"))
+    if "travel" in x:
+        travel = x["travel"]
 
-    price = find_by_key(x, "price")
-    price = float(price.replace(",", ".")) if price else None
+        source = travel["source"]
+        destination = travel["destination"]
 
-    day = find_by_key(x, "day")
-    month = month_to_number(find_by_key(x, "month"))
-    year = find_by_key(x, "year")
+        day = travel["day"]
+        month = travel["month"]
+        year = travel["year"]
 
-    if not all([source, price, day, month, year]):
+        purchase_type = "travel"
+
+    elif "commuter_card" in x:
+        card = x["commuter_card"]
+
+        source = card["source"]
+        destination = card["destination"]
+
+        day = card["from_day"]
+        month = card["from_month"]
+        year = card["from_year"]
+
+        purchase_type = "commuter-card"
+
+    else:
+        raise ValueError("Purchase is neither ticket nor commuter card.")
+
+    price = x.get("price")
+    if price:
+        amount = price["amount"]
+        curr = price["currency"]
+        price = Price.fromstring(f"{amount} {curr}")
+        price = price.amount_float
+
+    if not all([source, destination, price, day, month, year, purchase_type]):
         raise ValueError("Could not determine all values")
 
+    source = short_location(source)
+    destination = short_location(destination)
+
     year = int(year)
-    month = int(month)
+    month = int(month_to_number(month))
     day = int(day)
     date = f"{year}-{month:02}-{day:02}"
 
-    return TravelInfo(date, source, destination, price)
+    return TravelInfo(purchase_type, date, source, destination, price)
 
 
 def main():
