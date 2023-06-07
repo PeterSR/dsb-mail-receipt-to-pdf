@@ -165,9 +165,13 @@ def main():
 
             text = msg.text_html[0]
             text = text.replace("<head></head>", """<head><meta charset="utf-8"></head>""")
-            travel_info = extract_travel_info(text)
-            filename = generate_pdf_name(travel_info)
-            pdfkit.from_string(text, filename, options=pdf_options)
+            try:
+                travel_info = extract_travel_info(text)
+            except ValueError as e:
+                print(f"""Skipping "{msg}" due to exception: {e}""")
+            else:
+                filename = generate_pdf_name(travel_info)
+                pdfkit.from_string(text, filename, options=pdf_options)
 
 
 if __name__ == "__main__":
