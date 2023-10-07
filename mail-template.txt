@@ -1,6 +1,7 @@
 <vars>
 # template variable with custom regular expression:
 LOCATION = "[a-zA-ZæøåÆØÅ\.\s]+"
+COMMUTER_CARD_TYPE = "(Pendlerkort|Pendler20)"
 REST = ".*"
 </vars>
 
@@ -8,7 +9,7 @@ REST = ".*"
 Du har d. {{ day }}. {{ month }} year {{ ignore }} købt:
 </group>
 <group name="commuter_card">
-Pendlerkort, {{ card_type1 }}, {{ card_type2 }}, {{ source | re(LOCATION) }} &lt;-&gt; {{ destination | re(LOCATION) }}{{ ignore(REST) }}
+{{ commuter_card_type | re(COMMUTER_CARD_TYPE) }}, {{ ticket_class }}, {{ age_type }}, {{ source | re(LOCATION) }} &lt;-&gt; {{ destination | re(LOCATION) }}{{ ignore(REST) }}
 Dit kort er gyldigt {{ from_day }}. {{ from_month }} {{ from_year }} – {{ to_day }}. {{ to_month }} {{ to_year }}
 </group>
 <group name="travel">
